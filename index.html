@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>et願望清單</title>
+<meta name="theme-color" content="#171921">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="願望清單">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#171921; --card:#20232D; --card2:#282C38; --line:#323746;
+  --text:#ECEAE6; --sub:#9A9EAD; --dim:#6B7080;
+  --need:#F2B880; --want:#B9A6E8; --hot:#FF8572; --ok:#8FD3A8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  font-size:16px;-webkit-text-size-adjust:100%}
+body{padding:env(safe-area-inset-top) 0 calc(96px + env(safe-area-inset-bottom))}
+.wrap{max-width:560px;margin:0 auto;padding:0 14px}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,textarea,select{font:inherit;font-size:16px;color:var(--text)}
+
+/* 頂部 */
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 2px 10px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:34px;height:34px;border-radius:9px}
+.brand b{font-size:20px;letter-spacing:.5px}
+.brand small{display:block;color:var(--sub);font-size:12px;margin-top:1px}
+.iconbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--sub)}
+.iconbtn:active{background:var(--card)}
+
+/* 總額卡 */
+.sum{background:var(--card);border-radius:18px;padding:16px 16px 14px}
+.sum .lbl{color:var(--sub);font-size:13px}
+.sum .big{font-size:30px;font-weight:700;margin:4px 0 10px;letter-spacing:.5px}
+.sum .big span{font-size:15px;color:var(--sub);font-weight:500;margin-left:6px}
+.split{display:flex;gap:10px}
+.split div{flex:1;background:var(--card2);border-radius:12px;padding:9px 11px;font-size:13px;color:var(--sub)}
+.split b{display:block;font-size:17px;margin-top:2px}
+.split .n b{color:var(--need)} .split .w b{color:var(--want)}
+.note{font-size:12px;color:var(--dim);margin-top:9px}
+.note.warn{color:var(--need)}
+
+/* 分頁 */
+.tabs{display:flex;gap:6px;margin:16px 0 10px;background:var(--card);padding:4px;border-radius:14px}
+.tabs button{flex:1;padding:9px 0;border-radius:10px;color:var(--sub);font-size:15px}
+.tabs button.on{background:var(--card2);color:var(--text);font-weight:600}
+.tabs button.on[data-t=need]{color:var(--need)}
+.tabs button.on[data-t=want]{color:var(--want)}
+.tabs i{font-style:normal;font-size:12px;opacity:.8;margin-left:3px}
+
+/* 品項 */
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:12px 12px 12px 8px}
+.chk{width:38px;height:38px;flex:none;display:grid;place-items:center}
+.chk span{width:22px;height:22px;border-radius:50%;border:2px solid var(--dim)}
+.chk:active span{border-color:var(--ok);background:rgba(143,211,168,.2)}
+.body{flex:1;min-width:0;cursor:pointer}
+.nm{font-size:16px;line-height:1.35;word-break:break-word}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--dim)}
+.pri{padding:1px 7px;border-radius:6px;font-size:11.5px}
+.pri.p1{background:rgba(255,133,114,.16);color:var(--hot)}
+.pri.p3{background:var(--card2);color:var(--dim)}
+.memo{color:var(--sub);font-size:13px;margin-top:3px;white-space:pre-wrap;word-break:break-word}
+.right{text-align:right;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.price{font-size:16px;font-weight:600}
+.price.none{color:var(--dim);font-weight:400;font-size:13px}
+.lnk{font-size:12px;color:var(--want);text-decoration:none;padding:3px 0 0}
+.bought .nm{color:var(--sub)}
+.month{display:flex;justify-content:space-between;color:var(--sub);font-size:13px;margin:14px 4px 2px}
+.month:first-child{margin-top:2px}
+.empty{text-align:center;color:var(--dim);padding:44px 10px;font-size:14px;line-height:1.8}
+
+/* 新增鈕 */
+.fab{position:fixed;right:max(18px,calc(50% - 262px));bottom:calc(22px + env(safe-area-inset-bottom));
+  width:58px;height:58px;border-radius:50%;background:var(--need);color:#1D1A16;
+  font-size:32px;line-height:1;box-shadow:0 6px 20px rgba(0,0,0,.45);display:grid;place-items:center}
+.fab:active{transform:scale(.95)}
+
+/* 底部表單 */
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:10}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--card);
+  border-radius:20px 20px 0 0;max-height:92vh;overflow:auto;
+  padding:8px 16px calc(18px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .22s}
+.sheet.show{transform:none}
+.sheet .in{max-width:560px;margin:0 auto}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 12px}
+.sheet h3{margin:0 0 12px;font-size:17px}
+.f{margin-bottom:12px}
+.f label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px}
+.f input,.f textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:11px 12px;outline:none}
+.f input:focus,.f textarea:focus{border-color:var(--sub)}
+.f textarea{resize:vertical;min-height:70px}
+.row{display:flex;gap:10px}.row>.f{flex:1}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;padding:10px 0;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--sub);font-size:15px}
+.seg button.on{border-color:transparent;color:#1D1A16;font-weight:600;background:var(--sub)}
+.seg[data-k=type] button.on[data-v=need]{background:var(--need)}
+.seg[data-k=type] button.on[data-v=want]{background:var(--want)}
+.seg[data-k=pri] button.on[data-v="1"]{background:var(--hot)}
+.btns{display:flex;gap:8px;margin-top:6px}
+.btn{flex:1;padding:13px 0;border-radius:12px;background:var(--card2);font-size:16px}
+.btn.main{background:var(--need);color:#1D1A16;font-weight:600}
+.btn.ok{background:var(--ok);color:#13241A;font-weight:600}
+.btn.del{color:var(--hot);flex:0 0 auto;padding:13px 16px}
+.hint{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.6}
+.set{display:flex;flex-direction:column;gap:8px}
+.set .btn{text-align:left;padding:14px 14px}
+.set .btn small{display:block;font-size:12px;color:var(--dim);margin-top:2px}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  background:#ECEAE6;color:#171921;padding:9px 16px;border-radius:20px;font-size:14px;z-index:20;
+  opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;pointer-events:auto}
+.toast button{color:#7A4A1E;font-weight:700;margin-left:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <img src="icon-180.png" alt="">
+      <div><b>et願望清單</b><small id="today"></small></div>
+    </div>
+    <button class="iconbtn" id="btnSet" aria-label="設定">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </header>
+
+  <section class="sum">
+    <div class="lbl">待購買預估總額</div>
+    <div class="big" id="sumAll">NT$0</div>
+    <div class="split">
+      <div class="n">需要<b id="sumNeed">NT$0</b></div>
+      <div class="w">想要<b id="sumWant">NT$0</b></div>
+    </div>
+    <div class="note" id="sumNote"></div>
+  </section>
+
+  <nav class="tabs">
+    <button data-t="need" class="on">需要<i id="cNeed"></i></button>
+    <button data-t="want">想要<i id="cWant"></i></button>
+    <button data-t="done">已購買</button>
+  </nav>
+
+  <main class="list" id="list"></main>
+</div>
+
+<button class="fab" id="fab" aria-label="新增">＋</button>
+
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet"><div class="in" id="sheetIn"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
+
+<script>
+"use strict";
+/* ========== 資料存取（存在這支手機，鍵名加 wish: 前綴，不會和小錢包衝突） ========== */
+const KEY = "wish:items", KEY_BK = "wish:lastBackup";
+function load(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
+function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ toast("儲存失敗，手機空間可能不足"); return false; } }
+
+let items = load(KEY, []);
+let tab = "need";
+const PRI = {1:"急", 2:"一般", 3:"有空再說"};
+const TYPE = {need:"需要", want:"想要"};
+
+function persist(){ save(KEY, items); render(); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function today(){ const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function money(n){ return "NT$" + Math.round(n||0).toLocaleString("en-US"); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function num(v){ const n = parseFloat(String(v??"").replace(/[^\d.]/g,"")); return isFinite(n) && n>0 ? Math.round(n) : null; }
+function ago(dateStr){
+  const days = Math.floor((new Date(today()) - new Date(dateStr)) / 864e5);
+  if (days <= 0) return "今天加入"; if (days === 1) return "昨天加入";
+  if (days < 30) return days + " 天前加入";
+  return dateStr.slice(5).replace("-", "/") + " 加入";
+}
+/* 從貼上的文字中找出網址（例如從購物 APP 分享出來的文字） */
+function pickUrl(s){ const m = String(s||"").match(/https?:\/\/[^\s<>"'，。]+/i); return m ? m[0] : ""; }
+
+/* ========== 畫面 ========== */
+function render(){
+  const d = new Date();
+  document.getElementById("today").textContent = (d.getMonth()+1) + "月" + d.getDate() + "日　想買的都記在這";
+
+  const open = items.filter(x => !x.bought);
+  const need = open.filter(x => x.type === "need"), want = open.filter(x => x.type === "want");
+  const s = arr => arr.reduce((a,x) => a + (x.price||0), 0);
+  document.getElementById("sumAll").innerHTML = money(s(open)) + "<span>" + open.length + " 項</span>";
+  document.getElementById("sumNeed").textContent = money(s(need));
+  document.getElementById("sumWant").textContent = money(s(want));
+  document.getElementById("cNeed").textContent = need.length || "";
+  document.getElementById("cWant").textContent = want.length || "";
+
+  const noPrice = open.filter(x => !x.price).length;
+  const lastBk = load(KEY_BK, null);
+  const note = document.getElementById("sumNote");
+  // 從上次備份（或第一次使用）起超過 30 天才提醒
+  const since = lastBk || (items.length ? Math.min(...items.map(x => x.ts || Date.now())) : Date.now());
+  const needBk = items.length && (Date.now() - since) > 30*864e5;
+  note.className = "note"; note.innerHTML =
+    (noPrice ? noPrice + " 項還沒填價格，未計入總額" : "") +
+    (needBk ? (noPrice ? "<br>" : "") + '<span style="color:var(--need)">超過 30 天沒備份了，點右上角 ☰ →「備份資料」</span>' : "");
+
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === tab));
+  const list = document.getElementById("list");
+
+  if (tab === "done") {
+    const done = items.filter(x => x.bought).sort((a,b) => (b.boughtDate||"").localeCompare(a.boughtDate||"") || b.ts - a.ts);
+    if (!done.length) { list.innerHTML = '<div class="empty">還沒有已購買的項目<br>買到後按品項左邊的圓圈就會移到這裡</div>'; return; }
+    const groups = {};
+    done.forEach(x => { const m = (x.boughtDate||"").slice(0,7); (groups[m] = groups[m] || []).push(x); });
+    list.innerHTML = Object.keys(groups).sort().reverse().map(m => {
+      const g = groups[m], tot = g.reduce((a,x) => a + (x.actual||0), 0);
+      const [y, mo] = m.split("-");
+      return '<div class="month"><span>' + y + " 年 " + Number(mo) + " 月・" + g.length + ' 項</span><span>' + money(tot) + '</span></div>' +
+        g.map(x => '<div class="item bought" data-id="'+x.id+'">' +
+          '<div class="chk"><span style="border-color:var(--ok);background:var(--ok)"></span></div>' +
+          '<div class="body"><div class="nm">'+esc(x.name)+'</div>' +
+          '<div class="meta"><span>'+TYPE[x.type]+'</span><span>'+esc((x.boughtDate||"").slice(5).replace("-","/"))+' 購買</span></div></div>' +
+          '<div class="right"><div class="price">'+(x.actual!=null ? money(x.actual) : '<span class="price none">未填</span>')+'</div></div></div>').join("");
+    }).join("");
+    return;
+  }
+
+  const arr = (tab === "need" ? need : want).slice().sort((a,b) => a.pri - b.pri || b.ts - a.ts);
+  if (!arr.length) {
+    list.innerHTML = '<div class="empty">' + (tab === "need" ? "目前沒有需要買的東西" : "目前沒有想要買的東西") +
+      '<br>按右下角 ＋ 新增，或從 ☰ 批次匯入 LINE 上的清單</div>';
+    return;
+  }
+  list.innerHTML = arr.map(x =>
+    '<div class="item" data-id="'+x.id+'">' +
+      '<button class="chk" data-act="buy" aria-label="標記已購買"><span></span></button>' +
+      '<div class="body" data-act="edit"><div class="nm">'+esc(x.name)+'</div>' +
+        '<div class="meta">' + (x.pri !== 2 ? '<span class="pri p'+x.pri+'">'+PRI[x.pri]+'</span>' : '') + '<span>'+ago(x.created)+'</span></div>' +
+        (x.note ? '<div class="memo">'+esc(x.note)+'</div>' : '') +
+      '</div>' +
+      '<div class="right"><div class="price'+(x.price?'':' none')+'">'+(x.price ? money(x.price) : '未填價格')+'</div>' +
+        (x.link ? '<a class="lnk" href="'+esc(x.link)+'" target="_blank" rel="noopener">開啟連結 ↗</a>' : '') +
+      '</div>' +
+    '</div>').join("");
+}
+
+/* ========== 底部表單 ========== */
+const sheet = document.getElementById("sheet"), mask = document.getElementById("mask"), sheetIn = document.getElementById("sheetIn");
+function openSheet(html, focusSel){
+  sheetIn.innerHTML = '<div class="grab"></div>' + html;
+  mask.style.display = "block";
+  requestAnimationFrame(() => sheet.classList.add("show"));
+  sheetIn.querySelectorAll(".seg").forEach(seg => seg.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    seg.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+  }));
+  if (focusSel) setTimeout(() => { const el = sheetIn.querySelector(focusSel); if (el) el.focus(); }, 240);
+}
+function closeSheet(){ sheet.classList.remove("show"); mask.style.display = "none"; }
+mask.addEventListener("click", closeSheet);
+function segVal(k){ const b = sheetIn.querySelector('.seg[data-k="'+k+'"] button.on'); return b ? b.dataset.v : null; }
+function segHtml(k, opts, cur){ return '<div class="seg" data-k="'+k+'">' + opts.map(([v,t]) => '<button type="button" data-v="'+v+'"'+(String(v)===String(cur)?' class="on"':'')+'>'+t+'</button>').join("") + '</div>'; }
+
+/* 新增／編輯 */
+function openEdit(id){
+  const x = id ? items.find(i => i.id === id) : null;
+  const type = x ? x.type : (tab === "want" ? "want" : "need");
+  openSheet(
+    '<h3>' + (x ? "編輯" : "新增") + '</h3>' +
+    '<div class="f"><label>品名 *</label><input id="eName" placeholder="例如：洗衣精、藍牙耳機" value="'+esc(x?.name)+'" enterkeyhint="done"></div>' +
+    '<div class="f"><label>類型</label>' + segHtml("type", [["need","需要"],["want","想要"]], type) + '</div>' +
+    '<div class="f"><label>優先度</label>' + segHtml("pri", [[1,"急"],[2,"一般"],[3,"有空再說"]], x ? x.pri : 2) + '</div>' +
+    '<div class="row"><div class="f"><label>預估價格</label><input id="ePrice" inputmode="numeric" placeholder="可不填" value="'+(x?.price ?? "")+'"></div></div>' +
+    '<div class="f"><label>商品連結</label><input id="eLink" type="url" inputmode="url" placeholder="可不填，貼上網址或分享文字" value="'+esc(x?.link)+'"></div>' +
+    '<div class="f"><label>備註</label><textarea id="eNote" placeholder="尺寸、顏色、哪家店買…">'+esc(x?.note)+'</textarea></div>' +
+    '<div class="btns">' +
+      (x ? '<button class="btn del" id="eDel">刪除</button>' : '<button class="btn" id="eMore">存並再新增</button>') +
+      '<button class="btn main" id="eSave">儲存</button>' +
+    '</div>', x ? null : "#eName");
+
+  function doSave(again){
+    let name = document.getElementById("eName").value.trim();
+    let link = document.getElementById("eLink").value.trim();
+    // 品名欄若貼了含網址的分享文字，把網址移到連結欄
+    const u = pickUrl(name);
+    if (u) { name = name.replace(u, "").trim(); if (!link) link = u; }
+    if (link && !/^https?:\/\//i.test(link)) link = pickUrl(link) || ("https://" + link);
+    else if (link) link = pickUrl(link) || link;
+    if (!name) { toast("請輸入品名"); document.getElementById("eName").focus(); return; }
+    const data = {
+      name, link,
+      type: segVal("type"), pri: Number(segVal("pri")),
+      price: num(document.getElementById("ePrice").value),
+      note: document.getElementById("eNote").value.trim()
+    };
+    if (x) Object.assign(x, data);
+    else items.push(Object.assign({ id: uid(), created: today(), ts: Date.now(), bought: false }, data));
+    if (!x && data.type !== tab && tab !== "done") tab = data.type;
+    persist();
+    if (again) { openEdit(null); toast("已新增「" + name + "」"); } else { closeSheet(); toast(x ? "已更新" : "已新增「" + name + "」"); }
+  }
+  document.getElementById("eSave").onclick = () => doSave(false);
+  document.getElementById("eName").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) doSave(false); });
+  if (x) document.getElementById("eDel").onclick = () => {
+    if (!confirm("確定刪除「" + x.name + "」？")) return;
+    const idx = items.indexOf(x); items.splice(idx, 1); persist(); closeSheet();
+    toast("已刪除", () => { items.splice(idx, 0, x); persist(); });
+  };
+  else document.getElementById("eMore").onclick = () => doSave(true);
+}
+
+/* 標記已購買 */
+function openBuy(id){
+  const x = items.find(i => i.id === id); if (!x) return;
+  openSheet(
+    '<h3>買到了！</h3>' +
+    '<div style="margin:-4px 0 14px;color:var(--sub)">'+esc(x.name)+'</div>' +
+    '<div class="row">' +
+      '<div class="f"><label>實際金額</label><input id="bAmt" inputmode="numeric" value="'+(x.price ?? "")+'" placeholder="可不填"></div>' +
+      '<div class="f"><label>購買日期</label><input id="bDate" type="date" value="'+today()+'"></div>' +
+    '</div>' +
+    '<div class="hint">金額已帶入預估價格，有差再改。記帳請另外到小錢包登記。</div>' +
+    '<div class="btns" style="margin-top:14px"><button class="btn" id="bCancel">取消</button><button class="btn ok" id="bOk">確認已購買</button></div>');
+  document.getElementById("bCancel").onclick = closeSheet;
+  document.getElementById("bOk").onclick = () => {
+    x.bought = true;
+    x.actual = num(document.getElementById("bAmt").value);
+    x.boughtDate = document.getElementById("bDate").value || today();
+    persist(); closeSheet();
+    toast("已移到「已購買」", () => { x.bought = false; delete x.actual; delete x.boughtDate; persist(); });
+  };
+}
+
+/* 已購買項目：修改或改回 */
+function openDone(id){
+  const x = items.find(i => i.id === id); if (!x) return;
+  openSheet(
+    '<h3>已購買</h3>' +
+    '<div class="f"><label>品名</label><input id="dName" value="'+esc(x.name)+'"></div>' +
+    '<div class="row">' +
+      '<div class="f"><label>實際金額</label><input id="dAmt" inputmode="numeric" value="'+(x.actual ?? "")+'" placeholder="可不填"></div>' +
+      '<div class="f"><label>購買日期</label><input id="dDate" type="date" value="'+esc(x.boughtDate||today())+'"></div>' +
+    '</div>' +
+    (x.link ? '<div class="hint" style="margin:-4px 0 10px"><a class="lnk" href="'+esc(x.link)+'" target="_blank" rel="noopener">開啟商品連結 ↗</a></div>' : '') +
+    '<div class="btns"><button class="btn del" id="dDel">刪除</button><button class="btn" id="dBack">改回待購買</button><button class="btn main" id="dSave">儲存</button></div>');
+  document.getElementById("dSave").onclick = () => {
+    const n = document.getElementById("dName").value.trim(); if (!n) { toast("請輸入品名"); return; }
+    x.name = n; x.actual = num(document.getElementById("dAmt").value); x.boughtDate = document.getElementById("dDate").value || today();
+    persist(); closeSheet(); toast("已更新");
+  };
+  document.getElementById("dBack").onclick = () => {
+    x.bought = false; delete x.actual; delete x.boughtDate; tab = x.type; persist(); closeSheet(); toast("已改回「" + TYPE[x.type] + "」清單");
+  };
+  document.getElementById("dDel").onclick = () => {
+    if (!confirm("確定刪除「" + x.name + "」？")) return;
+    const idx = items.indexOf(x); items.splice(idx, 1); persist(); closeSheet();
+    toast("已刪除", () => { items.splice(idx, 0, x); persist(); });
+  };
+}
+
+/* 設定：批次匯入、備份、還原 */
+function openSettings(){
+  const lastBk = load(KEY_BK, null);
+  const open = items.filter(x => !x.bought).length, done = items.length - open;
+  openSheet(
+    '<h3>設定</h3>' +
+    '<div class="set">' +
+      '<button class="btn" id="sImport">批次匯入<small>把 LINE 上的清單整段貼上，一行一個品項</small></button>' +
+      '<button class="btn" id="sBackup">備份資料<small>' + (lastBk ? "上次備份：" + new Date(lastBk).toLocaleDateString("zh-TW") : "還沒備份過") + '・下載備份檔，存到雲端或傳給自己</small></button>' +
+      '<button class="btn" id="sRestore">還原備份<small>換手機時用，會取代目前的資料</small></button>' +
+    '</div>' +
+    '<div class="hint" style="margin-top:12px">目前共 ' + open + ' 項待購買、' + done + ' 項已購買。資料只存在這支手機，請定期備份。</div>' +
+    '<div class="btns" style="margin-top:12px"><button class="btn" id="sClose">關閉</button></div>');
+  document.getElementById("sClose").onclick = closeSheet;
+  document.getElementById("sImport").onclick = openImport;
+  document.getElementById("sBackup").onclick = doBackup;
+  document.getElementById("sRestore").onclick = () => { if (confirm("還原會用備份檔取代目前所有資料，確定繼續？")) document.getElementById("fileIn").click(); };
+}
+
+/* 解析一行文字：「品名 價格」或「品名 $價格」→ 最後的數字當預估價格 */
+function parseLine(line){
+  let s = line.replace(/^\s*(?:[-‧•・*·]|\d+[.、)）]|[（(]\d+[)）])\s*/, "").trim();
+  if (!s) return null;
+  let link = pickUrl(s); if (link) s = s.replace(link, "").trim();
+  let price = null;
+  const m = s.match(/^(.*?)[\s　]*(?:NT\$|\$|＄)?[\s　]*(\d[\d,]*)\s*(?:元|塊)?$/i);
+  if (m && m[1].trim()) { price = num(m[2]); s = m[1].trim(); }
+  if (!s) return null;
+  return { name: s, price, link };
+}
+function openImport(){
+  openSheet(
+    '<h3>批次匯入</h3>' +
+    '<div class="f"><label>匯入到</label>' + segHtml("type", [["need","需要"],["want","想要"]], tab === "want" ? "want" : "need") + '</div>' +
+    '<div class="f"><label>清單內容（一行一個）</label><textarea id="iText" style="min-height:180px" placeholder="洗衣精 199&#10;衛生紙&#10;藍牙耳機 $1290&#10;冬天外套"></textarea></div>' +
+    '<div class="hint">行尾的數字會當作預估價格（例如「洗衣精 199」）；行首的「-、•、1.」等符號會自動去掉；空白行略過。品名本身是數字結尾時（例如「iPhone 17」）請匯入後再檢查。</div>' +
+    '<div id="iPrev" class="hint" style="color:var(--sub)"></div>' +
+    '<div class="btns" style="margin-top:12px"><button class="btn" id="iCancel">取消</button><button class="btn main" id="iOk">匯入</button></div>', "#iText");
+  const ta = document.getElementById("iText"), prev = document.getElementById("iPrev");
+  const parsed = () => ta.value.split(/\r?\n/).map(parseLine).filter(Boolean);
+  ta.addEventListener("input", () => { const p = parsed(); prev.textContent = p.length ? "將匯入 " + p.length + " 項，其中 " + p.filter(x => x.price).length + " 項有價格" : ""; });
+  document.getElementById("iCancel").onclick = closeSheet;
+  document.getElementById("iOk").onclick = () => {
+    const p = parsed(); if (!p.length) { toast("沒有可匯入的內容"); return; }
+    const type = segVal("type"), base = Date.now();
+    p.forEach((x, i) => items.push({ id: uid(), created: today(), ts: base - i, bought: false, type, pri: 2, note: "", price: x.price, link: x.link, name: x.name }));
+    tab = type; persist(); closeSheet(); toast("已匯入 " + p.length + " 項");
+  };
+}
+function doBackup(){
+  const data = JSON.stringify({ app: "et-wishlist", version: 1, exported: new Date().toISOString(), items }, null, 1);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+  a.download = "願望清單備份_" + today() + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  save(KEY_BK, Date.now()); render(); closeSheet(); toast("備份檔已下載");
+}
+document.getElementById("fileIn").addEventListener("change", e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (d.app !== "et-wishlist" || !Array.isArray(d.items)) throw 0;
+      items = d.items.filter(x => x && x.id && x.name); persist(); closeSheet(); toast("已還原 " + items.length + " 筆資料");
+    } catch (err) { toast("這不是願望清單的備份檔"); }
+  };
+  r.readAsText(f);
+});
+
+/* ========== 提示訊息（可復原） ========== */
+let toastTimer;
+function toast(msg, undo){
+  const t = document.getElementById("toast");
+  t.innerHTML = esc(msg) + (undo ? '<button id="tUndo">復原</button>' : "");
+  t.classList.add("show");
+  if (undo) document.getElementById("tUndo").onclick = () => { undo(); t.classList.remove("show"); };
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), undo ? 4500 : 2200);
+}
+
+/* ========== 事件 ========== */
+document.querySelector(".tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { tab = b.dataset.t; render(); window.scrollTo(0,0); } });
+document.getElementById("list").addEventListener("click", e => {
+  if (e.target.closest("a")) return;
+  const it = e.target.closest(".item"); if (!it) return;
+  const id = it.dataset.id;
+  if (tab === "done") return openDone(id);
+  if (e.target.closest('[data-act="buy"]')) return openBuy(id);
+  openEdit(id);
+});
+document.getElementById("fab").onclick = () => openEdit(null);
+document.getElementById("btnSet").onclick = openSettings;
+
+render();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
